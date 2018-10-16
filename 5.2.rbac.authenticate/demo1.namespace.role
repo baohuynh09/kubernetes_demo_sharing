@@ -1,0 +1,35 @@
+REFER TO note DEMO#1 in [k8s_in_action].chap12.RBAC.KNOWLEDGE
+
+#-------------------------------------------#
+#               DEMO RBAC #1                #
+#            (Role & RoleBinding)           #
+#            *For Namespace-level*          #
+#-------------------------------------------#
+# Create 2 pod in 2 different namespace
+kubectl create ns foo
+kubectl run test-foo --image=luksa/kubectl-proxy -n foo
+kubectl create ns bar
+kubectl run test-bar --image=luksa/kubectl-proxy -n bar
+
+# Login to 1 pod & try listing cluster'status (via API server)
+kubectl exec -it <test_foo_pod> -n foo "curl localhost:8001/api/v1/namespaces/foo/services"
+--> failed because of RBAC authentication
+(Note: localhost:8001 --> kubectl proxy process is listening)
+
+
+# Creating a role for reading services,pods
+kubectl create role service-reader-role --verb=get,list \
+--resource=services,pods -n foo
+
+# Then bind that Role to ServiceAccount(default) in namespace(foo)
+kubectl create rolebinding test --role=service-reader \
+--serviceaccount=foo:default -n foo
+                 \_________/
+                      V
+                (default ServiceAccount
+                 in foo namespace)
+
+# Check listing cluster'status via APIServer again:
+kubectl exec -it <test_foo_pod> -n foo "curl localhost:8001/api/v1/namespaces/foo/services"
+>>> Success !
+

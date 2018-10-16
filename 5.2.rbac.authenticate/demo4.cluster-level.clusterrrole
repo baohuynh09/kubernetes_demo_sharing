@@ -1,0 +1,24 @@
+#-------------------------------------------#
+#             DEMO RBAC #4                  #
+#     (ClusterRole & ClusterRoleBinding)    #
+#           *For all namespaces*            #
+#-------------------------------------------#
+
+# Before bindings
+kb exec -it <foo_test_pod> curl localhost:8001/api/v1/pods
+kb exec -it <foo_test_pod> curl localhost:8001/api/v1/namespaces/foo/pods
+--> both Failed (could not list pods at cluster scope/in foo namespace)
+
+# Create ClusterRoleBinding(view-test) from ClusterRole(view)
+# && assign to ServiceAccount(default) at namespace(foo)
+kubectl create clusterrolebinding view-test --clusterrole=view \
+--serviceaccount=foo:default
+
+# After Bindings:
++ List pods in 'foo'
+kb exec -it <foo_test_pod> curl localhost:8001/api/v1/namespaces/foo/pods >>> OK
++ List pods in 'bar'
+kb exec -it <foo_test_pod> curl localhost:8001/api/v1/namespaces/bar/pods >>> OK
++ List pods in all namespaces
+kb exec -it <foo_test_pod> curl localhost:8001/api/v1/pods                >>> OK
+

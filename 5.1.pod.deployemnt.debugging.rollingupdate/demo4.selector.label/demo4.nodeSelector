@@ -1,0 +1,6 @@
+kb label nodes <your-node-name> diskrun=green
+kb get nodes --show-lables | grep green
+kb create -f nginx.deployment.yaml
+   --> all replicas only deploy on same node selector
+kb scale --replicas=5 nginx-deployment
+   --> all replicas only deploy on same node selector

@@ -1,0 +1,45 @@
+#-------------------------------------------#
+#     HORIZONTAL POD AUTOSCALING (HPA)      #
+#-------------------------------------------#
+Requirement:
+    |
+    +--> (1)heapster: collects cluster-wide metrics from all kubelet daemon (worker nodes).
+    +--> (2)Influxdb: fast time-series database optimized for massive writes of events and metrics data.
+    +--> (3)grafana:  display metrics on dashboard for cluster administrator.
+
+(1)&(2): install via https://github.com/kubernetes/heapster.git
+		 (kb create -f ./deploy/kube-config/rbac/heapster-rbac.yaml)
+         (kb create -f ./deploy/kube-config/influxdb/)
+(2): open port 8086 for accessing to influxdb via cmdline.
+(3): open port 30081 on node host of grafana (security group)
+         --> use ssh port-fwding for web-browser to view grafana dashboard
+             at window host viewer.
+
+# Create sample deployment for autoscaling:
+kubectl create -f nginx.yaml
+
+# Config scaling for kube-controller-mananger:
+@<master_node> : vi /etc/kubernetes/manifests/kube-controller-manager.manifest
+--> add this line:
+            exec /usr/local/bin/kube-controller-manager
+            ....
+            --horizontal-pod-autoscaler-use-rest-clients=false
+                  (only use for auscaling on heapster-based cluster)
+@<kubectl_node>: kubectl delete <kube-controller-manager> -n kube-system
+            --> for restarting kube-controller-manager :D
+
+# Actual autoscaler deployment
+kubectl autoscale deployment nginx-grafana --min=2 --max=5 --cpu-percent=60
+kubectl get hpa --> TARGET (0%/50%)
+kubectl logs hpa (every events OK!)
+
+# increase CPU on POD of nginx
+@<pod_of_nginx>: apt-get update
+@<pod_of_nginx>: apt-get install stress
+@<pod_of_nginx>: stress --cpu 4 --timeout 300s
+
+# watching for scaling process
++ watch -n 1 kubectl get pods,hpa,deployment -o wide
+--> when CPU usage > 60%, pod will scaled-up.       (need ?second for confirmation)
+         CPU usage < 60%, pods will be scaled-down. (need ?second for confirmation)
+

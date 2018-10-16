@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ubuntu-sshd-diff-namespace
+  labels:
+    app: test-network-k8s
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: rastasheep/ubuntu-sshd:12.04 
+        name: ubuntu-sshd-container

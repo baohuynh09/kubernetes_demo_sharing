@@ -1,0 +1,23 @@
+#------------------------------------------ #
+#               ROLLING UPDATES             #
+#          ( kubectl set image... )         #
+#------------------------------------------ #
+- Update POD one by one => avoid downtime of application
+- Support roll-back to previous one (stable)
+- Use case: updates with new image/release then roll-back to previous one
+   |
+   +--> kubectl set image deployment/nginx-deployment   nginx-container=nginx:1.15.4
+   |                   |----------V------------------|  |-----V-------|  |----V------|
+   |                         <deployment_name>        <name_container>  <name_new_image>
+   |
+   +--> kubectl rollout status deployment/nginx-deployment
+   |        >>> deployment "kubernetes-bootcamp" successfully rolled out (VERIFICATION)
+   |
+   |
+   +--> kubectl rollout undo deployment/nginx-deployment
+                             |------------V------------|
+                                  <deployment_name>
+
+Note: If a Deployment is exposed publicly, during an update, the network traffic will be routed
+      to available PODS (both NEW and OLD)
+

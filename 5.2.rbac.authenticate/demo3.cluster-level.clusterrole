@@ -1,0 +1,24 @@
+REFER TO note DEMO#2 in [k8s_in_action].chap12.RBAC.KNOWLEDGE
+
+#-------------------------------------------#
+#             DEMO RBAC #2                  #
+#     (ClusterRole & ClusterRoleBinding)    #
+#         *For cluster-level-resource*      #
+#-------------------------------------------#
+
+# Before Bindings
+@<foo_test_pod>: #curl localhost:8001/api/v1/persistentvolumes
+--> Failed !
+
+# Create ClusterRole for get/list PersistentVolumes at cluster-level
+kubectl create clusterrole pv-reader --verb=get,list \
+--resource=persistentvolumes
+
+# Create a ClusterRoleBinding for ServiceAccount(default) in namespace(foo)
+kubectl create clusterrolebinding pv-test --clusterrole=pv-reader \
+--serviceaccount=foo:default
+
+#After Bindings:
+@<foo_test_pod>: #curl localhost:8001/api/v1/persistentvolumes
+--> Success !
+

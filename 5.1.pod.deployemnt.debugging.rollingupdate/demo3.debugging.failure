@@ -1,0 +1,19 @@
+#-----------------------------------#
+#        DEBUGGING DEMO 2           #
+#-----------------------------------#
+Secnario:
+Step1: deploy standalone_architect/wordpress-deployment.yaml
+       --> Failed (containerNotStarted)
+Step2: debugging failure
+       kb logs <pod_name>        --> nothing much
+       kb describe <pod_name>    --> found that missing mysql-pass secret
+Step3 (Fix): create mysql-pass secret
+       kubectl create secret generic mysql-pass --from-literal=password=ROOT_PASSWORD
+Step4: delete & recreate wordpress-deployment.yaml
+       --> Still failure (CrashLoopback)
+Step5: kb describe <pod_name>    --> 'describe' this time doesn't help
+       kb logs <pod_name>        --> found that connection to mysql database is corrupted
+                                     (mysqli::mysqli(): php_network_getaddresses: getaddrinfo failed:)
+Step6 (Fix):
+       deploy both mysql+wordpress
+       --> OK now :)
